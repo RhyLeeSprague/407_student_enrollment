@@ -31,6 +31,7 @@ public class EnrollmentGUI extends JFrame {
     }
 
     public static void main(String[] args) {
+        DatabaseSetup.initializeDatabase();
         SwingUtilities.invokeLater(() -> new EnrollmentGUI().setVisible(true));
     }
 }

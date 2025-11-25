@@ -2,8 +2,7 @@ package ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.sql.*;
+// import java.sql.*;  // original import
 
 public class StudentFrame extends JFrame {
 
@@ -29,8 +28,16 @@ public class StudentFrame extends JFrame {
 
         add(inputPanel, BorderLayout.NORTH);
         add(new JScrollPane(resultArea), BorderLayout.CENTER);
-        add(viewCoursesButton, BorderLayout.SOUTH);
+
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(viewCoursesButton, BorderLayout.CENTER);
+        bottomPanel.add(new BackButtonPanel(this), BorderLayout.WEST);
+
+        add(bottomPanel, BorderLayout.SOUTH);
     }
+
+    /*
+    // original version
 
     private void loadCourses() {
         String studentID = studentIDField.getText().trim();
@@ -73,5 +80,29 @@ public class StudentFrame extends JFrame {
             resultArea.setText("Error loading courses.");
         }
     }
+    */
+
+    // demo version
+    private void loadCourses() {
+        String studentID = studentIDField.getText().trim();
+
+        if (studentID.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Enter a Student ID");
+            return;
+        }
+
+        var list = presentationDB.getStudentCourses(studentID);
+
+        StringBuilder sb = new StringBuilder();
+        for (var c : list) {
+            sb.append(c.name)
+              .append(" - ")
+              .append(c.schedule)
+              .append("\n");
+        }
+
+        resultArea.setText(sb.length() > 0 ? sb.toString() : "No courses found.");
+    }
 }
+
 

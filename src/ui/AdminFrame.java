@@ -3,7 +3,7 @@ package ui;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.*;
+// import java.sql.*;  //original import
 
 public class AdminFrame extends JFrame {
 
@@ -15,7 +15,7 @@ public class AdminFrame extends JFrame {
     public AdminFrame() {
         setTitle("Admin Control Panel");
         setSize(400, 300);
-        setLayout(new GridLayout(6, 2));
+        setLayout(new GridLayout(7, 2));
 
         JLabel courseIDLabel = new JLabel("Course ID:");
         JLabel courseNameLabel = new JLabel("Course Name:");
@@ -39,10 +39,12 @@ public class AdminFrame extends JFrame {
         add(scheduleField);
         add(new JLabel());
         add(addButton);
-
+        add(new BackButtonPanel(this));
         addButton.addActionListener(e -> addCourse());
     }
 
+    /*
+    // original version
     private void addCourse() {
         String courseID = courseIDField.getText();
         String courseName = courseNameField.getText();
@@ -80,6 +82,25 @@ public class AdminFrame extends JFrame {
             JOptionPane.showMessageDialog(this, "Error adding course.");
         }
     }
+    */
+
+    // demo version (for now)
+    private void addCourse() {
+        String courseID = courseIDField.getText();
+        String courseName = courseNameField.getText();
+        String instructor = instructorField.getText();
+        String schedule = scheduleField.getText();
+
+        if (courseID.isEmpty() || courseName.isEmpty() || instructor.isEmpty() || schedule.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "All fields must be filled!");
+            return;
+        }
+
+        presentationDB.addCourse(courseID, courseName, instructor, schedule);
+
+        JOptionPane.showMessageDialog(this, "Course added successfully!");
+    }
 }
+
 
 

@@ -1,3 +1,4 @@
+package ui;
 import java.sql.*;
 
 public class DatabaseSetup {

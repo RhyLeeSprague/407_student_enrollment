@@ -5,90 +5,67 @@ import java.awt.*;
 import java.sql.*;
 
 public class InstructorFrame extends JFrame {
-    private JComboBox<String> courseList;
-    private JTextArea studentArea;
-    private JTextField gradeField;
-    private Connection conn;
+
+    private JTextField instructorIDField;
+    private JTextArea courseListArea;
 
     public InstructorFrame() {
-        setTitle("Instructor Dashboard");
-        setSize(600, 400);
-        setLocationRelativeTo(null);
+        setTitle("Instructor Portal");
+        setSize(400, 300);
+        setLayout(new BorderLayout());
 
-        try {
-            conn = DriverManager.getConnection("jdbc:sqlite:university.db");
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "DB Connection Failed: " + e.getMessage());
-        }
+        JPanel topPanel = new JPanel(new GridLayout(1, 2));
+        topPanel.add(new JLabel("Instructor ID: "));
 
-        courseList = new JComboBox<>();
-        JButton viewBtn = new JButton("View Enrolled Students");
-        JButton gradeBtn = new JButton("Submit Grade");
-        gradeField = new JTextField(5);
-        studentArea = new JTextArea(10, 40);
+        instructorIDField = new JTextField();
+        topPanel.add(instructorIDField);
 
-        loadCourses();
+        JButton viewCoursesButton = new JButton("View Courses");
+        viewCoursesButton.addActionListener(e -> loadInstructorCourses());
 
-        JPanel topPanel = new JPanel();
-        topPanel.add(new JLabel("Your Courses:"));
-        topPanel.add(courseList);
-        topPanel.add(viewBtn);
-
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.add(new JLabel("Grade:"));
-        bottomPanel.add(gradeField);
-        bottomPanel.add(gradeBtn);
+        courseListArea = new JTextArea();
+        courseListArea.setEditable(false);
 
         add(topPanel, BorderLayout.NORTH);
-        add(new JScrollPane(studentArea), BorderLayout.CENTER);
-        add(bottomPanel, BorderLayout.SOUTH);
-
-        viewBtn.addActionListener(e -> viewStudents());
-        gradeBtn.addActionListener(e -> submitGrades());
-
-        setVisible(true);
+        add(new JScrollPane(courseListArea), BorderLayout.CENTER);
+        add(viewCoursesButton, BorderLayout.SOUTH);
     }
 
-    private void loadCourses() {
-        try (PreparedStatement ps = conn.prepareStatement("SELECT name FROM courses WHERE instructor_id=?")) {
-            ps.setInt(1, 1); // demo instructor_id = 1
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) courseList.addItem(rs.getString("name"));
-        } catch (SQLException e) {
-            e.printStackTrace();
+    private void loadInstructorCourses() {
+        String instructorID = instructorIDField.getText().trim();
+
+        if (instructorID.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Enter an Instructor ID");
+            return;
         }
-    }
 
-    private void viewStudents() {
-        studentArea.setText("");
-        String selected = (String) courseList.getSelectedItem();
-        if (selected == null) return;
-        try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT s.name FROM students s JOIN enrollments e ON s.student_id=e.student_id " +
-                        "WHERE e.course_id=(SELECT course_id FROM courses WHERE name=?)")) {
-            ps.setString(1, selected);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) studentArea.append(rs.getString("name") + "\n");
-        } catch (SQLException e) {
-            e.printStackTrace();
+        Connection conn = DatabaseSetup.getConnection();
+        if (conn == null) {
+            courseListArea.setText("Database connection failed.");
+            return;
         }
-    }
 
-    private void submitGrades() {
-        String selected = (String) courseList.getSelectedItem();
-        String grade = gradeField.getText().trim();
-        if (selected == null || grade.isEmpty()) return;
+        try {
+            String sql = "SELECT name FROM courses WHERE instructor_id = ?";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, instructorID);
 
-        try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO grades (enrollment_id, grade) " +
-                        "SELECT e.enrollment_id, ? FROM enrollments e " +
-                        "JOIN courses c ON e.course_id = c.course_id WHERE c.name=?")) {
-            ps.setString(1, grade);
-            ps.setString(2, selected);
-            int inserted = ps.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Grades submitted for " + inserted + " student(s).");
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error submitting grades: " + e.getMessage());
+            ResultSet rs = pstmt.executeQuery();
+
+            StringBuilder sb = new StringBuilder();
+            while (rs.next()) {
+                sb.append(rs.getString("name")).append("\n");
+            }
+
+            courseListArea.setText(sb.length() > 0 ? sb.toString() : "No courses found.");
+
+            rs.close();
+            pstmt.close();
+            conn.close();
+
+        } catch (SQLException ex) {
+            courseListArea.setText("Error loading courses.");
         }
     }
 }
+

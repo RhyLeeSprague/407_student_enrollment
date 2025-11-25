@@ -2,8 +2,7 @@ package ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.*;
-
+// import java.sql.*;   // original import
 public class EnrollmentGUI extends JFrame {
 
     private JTextField studentIDField;
@@ -12,7 +11,7 @@ public class EnrollmentGUI extends JFrame {
     public EnrollmentGUI() {
         setTitle("Course Enrollment");
         setSize(350, 200);
-        setLayout(new GridLayout(3, 2));
+        setLayout(new GridLayout(4, 2));
 
         add(new JLabel("Student ID:"));
         studentIDField = new JTextField();
@@ -24,9 +23,14 @@ public class EnrollmentGUI extends JFrame {
 
         JButton enrollButton = new JButton("Enroll");
         enrollButton.addActionListener(e -> enrollStudent());
+
         add(new JLabel());
         add(enrollButton);
+        add(new BackButtonPanel(this));
     }
+
+    /*
+    // original version
 
     private void enrollStudent() {
         String studentID = studentIDField.getText().trim();
@@ -61,6 +65,23 @@ public class EnrollmentGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Error enrolling student.");
         }
     }
+    */
+
+    // demo version
+    private void enrollStudent() {
+        String studentID = studentIDField.getText().trim();
+        String courseID = courseIDField.getText().trim();
+
+        if (studentID.isEmpty() || courseID.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "All fields are required.");
+            return;
+        }
+
+        presentationDB.enroll(studentID, courseID);
+
+        JOptionPane.showMessageDialog(this, "Enrollment successful!");
+    }
 }
+
 
 
